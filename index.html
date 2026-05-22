@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARG :: Терминал доступа [v0.2]</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #03070f;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', 'Fira Code', monospace;
+            padding: 20px;
+        }
+
+        .crt {
+            width: 900px;
+            max-width: 100%;
+            height: 600px;
+            background-color: #000000;
+            border: 2px solid #14f0f0;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2), inset 0 0 10px rgba(0, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                rgba(0, 255, 255, 0.03) 2px,
+                transparent 2px,
+                transparent 6px
+            );
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .terminal-header {
+            background-color: #0a1a1a;
+            padding: 8px 15px;
+            border-bottom: 1px solid #14f0f0;
+            display: flex;
+            justify-content: space-between;
+            color: #7ff5f5;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .blink {
+            background-color: #14f0f0;
+            color: black;
+            padding: 0 6px;
+            animation: blink-animation 1s step-end infinite;
+        }
+
+        @keyframes blink-animation {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .terminal-output {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            color: #add8e6;
+            font-size: 15px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .command-line {
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            background-color: #000000;
+            border-top: 1px solid #1a3b3b;
+            padding: 10px;
+        }
+
+        .prompt-label {
+            color: #00ffff;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        #command-input {
+            background: transparent;
+            border: none;
+            color: #add8e6;
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            flex: 1;
+            outline: none;
+            caret-color: #00ffff;
+        }
+
+        .terminal-output::-webkit-scrollbar {
+            width: 6px;
+        }
+        .terminal-output::-webkit-scrollbar-track {
+            background: #000000;
+        }
+        .terminal-output::-webkit-scrollbar-thumb {
+            background: #14f0f0;
+            border-radius: 3px;
+        }
+
+        .help-tip {
+            font-size: 11px;
+            color: #3a6e6e;
+            text-align: center;
+            border-top: 1px solid #111;
+            padding: 4px;
+        }
+        
+        /* Эффект глитча */
+        .glitch-effect {
+            animation: terminalGlitch 0.2s 3;
+        }
+        
+        @keyframes terminalGlitch {
+            0% { transform: translate(0); opacity: 1; }
+            20% { transform: translate(-3px, 1px); opacity: 0.8; }
+            40% { transform: translate(3px, -1px); opacity: 0.9; }
+            60% { transform: translate(-1px, 2px); opacity: 0.85; }
+            80% { transform: translate(1px, -2px); opacity: 0.95; }
+            100% { transform: translate(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+<div class="crt" id="crtContainer">
+    <div class="terminal-header">
+        <span>SYSTEM://ARG_EMU_V0.2</span>
+        <span>🌐 NETWORK: <span style="color:#ff6666;">⚠️ НЕСТАБИЛЬНО</span> ★ <span class="blink">▲</span></span>
+    </div>
+    <div class="terminal-output" id="output-area">
+        <div>> Инициализация нейросвязи...</div>
+        <div>> Система загружена. Введите HELP для списка команд.</div>
+        <div>> -------------------------------------------------</div>
+    </div>
+    <div class="command-line">
+        <span class="prompt-label">[guest@sys] $&gt;</span>
+        <input type="text" id="command-input" autofocus>
+    </div>
+    <div class="help-tip">
+        📟 Команды: help | ls | read [файл] | find [ключ] | strings | final | clear
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    //Я больше не могу дать подсказок. Нет времени, но держи:
+    //crypt 'B^^ZYSE_^_HOI`NO^akfAYCaXeo`om^hSsO@g'
+    //key 42
+    
+    let trapTriggered = false;
+    
+    // Мгновенный переход на Rickroll
+    function instantRickRoll() {
+        if (trapTriggered) return;
+        trapTriggered = true;
+        
+        const container = document.getElementById('crtContainer');
+        container.classList.add('glitch-effect');
+        
+        
+        appendToTerminal("\n⚠️ СИСТЕМНЫЙ СБОЙ: ОБНАРУЖЕНА НЕСАНКЦИОНИРОВАННАЯ КОМАНДА ⚠️", true);
+        appendToTerminal("> Активация протокола немедленного перенаправления...");
+        
+        setTimeout(() => {
+            window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+        }, 800);
+    }
+
+   
+
+    const FILESYSTEM = {
+        "diary.txt": `=== ДНЕВНИК ===\n\n[ЗАПИСЬ #1 | 2025-11-28]\n Нет времени. Нет времени. У меня мало времени. Извини, кто-то уничтожает следы. Или что-то... Почти всё уничтожено... `,
+        "notes.txt": `[ЗАМЕТКИ РУКОЙ]\nKey: 42`,
+        "syslog.bin": `SYS_DATA:0x00 0xFF [МУСОР] 0xDE 0xAD 0xBE 0xEF`
+    };
+
+    const outputDiv = document.getElementById('output-area');
+    const inputField = document.getElementById('command-input');
+    let commandHistory = [];
+    let historyIndex = -1;
+
+    function appendToTerminal(text, isError = false) {
+        const line = document.createElement('div');
+        if (isError) {
+            line.style.color = "#f0a0a0";
+            line.innerHTML = `⚠️ ${text}`;
+        } else {
+            line.innerHTML = text;
+        }
+        outputDiv.appendChild(line);
+        line.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function listFiles() {
+        const files = Object.keys(FILESYSTEM);
+        appendToTerminal("📁 Доступные файлы для чтения:");
+        files.forEach(file => appendToTerminal(`   - ${file}`));
+        appendToTerminal("(Используйте 'read [имя_файла]' чтобы открыть)");
+    }
+
+    function readFile(filename) {
+        const file = FILESYSTEM[filename];
+        if (file) {
+            appendToTerminal(`\n📄 Содержимое ${filename}:\n${file}\n`);
+        } else {
+            appendToTerminal(`Файл "${filename}" не найден.`, true);
+        }
+    }
+
+    function showHelp() {
+        appendToTerminal("\n=== ДОСТУПНЫЕ КОМАНДЫ ===");
+        appendToTerminal(" help          - Показать эту справку");
+        appendToTerminal(" ls            - Показать список файлов");
+        appendToTerminal(" read [file]   - Прочитать содержимое файла");
+        appendToTerminal(" final         - Завершить игру (⚠️ НЕОБРАТИМО)");
+        appendToTerminal(" clear         - Очистить экран терминала");
+        appendToTerminal("-------------------------------------------------");
+        appendToTerminal("💡 Подсказка: 'final' — это не шутка. Система предупреждала.");
+    }
+
+    function clearScreen() {
+        outputDiv.innerHTML = '';
+        appendToTerminal("> Экран очищен. Введите help для команд.");
+    }
+
+    function processCommand(input) {
+        let trimmed = input.trim();
+        if (trimmed === "") return;
+        if (trapTriggered) return;
+
+        appendToTerminal(`[guest@sys] $&gt; ${input}`);
+
+        const parts = trimmed.toLowerCase().split(/\s+/);
+        const command = parts[0];
+        const args = parts.slice(1);
+
+        if (command === "final") {
+            instantRickRoll();
+            return;
+        }
+
+        
+        switch (command) {
+            case "help":
+                showHelp();
+                break;
+            case "ls":
+                listFiles();
+                break;
+            case "read":
+                if (args.length === 0) {
+                    appendToTerminal("Укажите имя файла.", true);
+                } else {
+                    readFile(args[0]);
+                }
+                break;
+            case "clear":
+                clearScreen();
+                break;
+            default:
+                appendToTerminal(`Ошибка: '${command}' не найдена. Введите help.`, true);
+                break;
+        }
+    }
+
+    inputField.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const cmd = inputField.value;
+            if (cmd.trim() !== "") {
+                commandHistory.push(cmd);
+                historyIndex = commandHistory.length;
+                processCommand(cmd);
+                inputField.value = "";
+            }
+            e.preventDefault();
+        } else if (e.key === 'ArrowUp') {
+            if (commandHistory.length > 0 && historyIndex > 0) {
+                historyIndex--;
+                inputField.value = commandHistory[historyIndex];
+            }
+            e.preventDefault();
+        } else if (e.key === 'ArrowDown') {
+            if (historyIndex < commandHistory.length - 1) {
+                historyIndex++;
+                inputField.value = commandHistory[historyIndex];
+            } else if (historyIndex === commandHistory.length - 1) {
+                historyIndex++;
+                inputField.value = "";
+            }
+            e.preventDefault();
+        }
+    });
+
+    document.body.addEventListener('click', () => {
+        if (!trapTriggered) {
+            inputField.focus();
+        }
+    });
+    inputField.focus();
+</script>
+</body>
+</html>
